@@ -5,6 +5,7 @@ package blobstorage;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,9 @@ import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.blobstore.UploadOptions;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.FilterOperator;
 
 @SuppressWarnings("serial")
 public class Upload extends HttpServlet {
@@ -90,6 +94,7 @@ public class Upload extends HttpServlet {
      *      \r\n------WebKitFormBoundaryXuA6PslJ1A21INU9--\r\n
      */
     
+    @SuppressWarnings("deprecation")
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse res)
         throws ServletException, IOException {
@@ -175,9 +180,25 @@ public class Upload extends HttpServlet {
         res.getWriter().println("__BlobInfo__: " + i);
         res.getWriter().println("blobKey: " + blobKey);
         
-        
-        
         // dump all datastore entities for this bucket, then filter on date/older ones for delete
+        // normally you only have 1 bucket per app, so there is no issue with choosing buckets.
+        // we will store all rover(s) data in same bucket distinguished with filename.
         
+        //datastoreService
+        Query query = new Query("__BlobInfo__");
+        
+        Date date = new Date(); // "now"
+        
+        // advance 10 minutes into future
+        date.setTime( date.getTime() + 1000*60*10 );
+        
+        query.addFilter("creation", FilterOperator.LESS_THAN, date);
+        
+        for (Entity ent : datastoreService.prepare(query).asIterable())
+        {
+            //Date creationdate = (Date)ent.getProperty("creation");            
+            log.info("DELETING Entity: " + ent.toString() );
+            datastoreService.delete( ent.getKey() );
+        }
     }
 }
