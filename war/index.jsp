@@ -71,6 +71,7 @@
 	        <form action="<%= BlobstoreServiceIPFilter.createUploadUrl("/upload") %>" method="post" enctype="multipart/form-data">
 		        <fieldset>
 		          <legend>Upload Rover Image(jpg) file:</legend>
+		            <input type="text" name="foo">    <!-- this produces foo=user_input in multipart section -->
 		            <input type="file" name="roverX"> <br>
 		            <input type="submit" value="Submit">
 		        </fieldset>

@@ -83,8 +83,7 @@ public class Upload extends HttpServlet {
      *        <input type="submit" value="Submit">
      *    </form>
      *    
-     *    NOTE that the first <input> of type "text" and value "foo" has been deleted, so that first boundary header section should
-     *      no longer be present on wire.
+     *    NOTE that the first <input> of type "text" and value "foo" shows up as the first boundary header section.
      *      
      *      
      * Stream ends with:
@@ -98,7 +97,13 @@ public class Upload extends HttpServlet {
         //@SuppressWarnings("deprecation")
         //Map<String, BlobKey> blobs = blobstoreService.getUploadedBlobs(req);
         
+        // The upload url looks like this: http://10.2.100.29:8080/_ah/upload/aglub19hcHBfaWRyIgsSFV9fQmxvYlVwbG9hZFNlc3Npb25fXxiAgICAgICQCQw
+        // I believe the blobkey will be parsed from the end of URL.  I don't know how multiple keys are encoded ... hazard a guess that
+        //  xxx.createUploadUrl() takes a multi-key argument and keys would then have to be encoded as QSPs. 
         Map<String, List<BlobKey>> blobs = blobstoreService.getUploads(req);
+        
+        // Note that the above single line does all the work of receiving the blob in multi-part payload and saving it to storage,
+        //   everything below here is for debug purposes + sending the response (next upload url to our special repeat-post client)
         
         // EXAMPLE LOG OUTPUT --> INFO: UPLOAD: blobs map: {roverX=<BlobKey: rpg8D5DCjsubtsNaTfxrpg>}
         //   The String comes from the html form: <input type="file" name="roverX">
@@ -115,8 +120,7 @@ public class Upload extends HttpServlet {
         Map<String, List<FileInfo>> fileInfos = blobstoreService.getFileInfos(req);
         
         // EXAMPLE LOG OUTPUT -->
-        //   INFO: UPLOAD: FileInfo map: {roverX=[<FileInfo: contentType = image/jpeg, creation = Wed Jan 01 23:10:33 CST 2014, filename = rover_2_cam1.jpg, size = 129083, md5Hash = b350fec552ae4e468247942665457167>]}
-        //   INFO: UPLOAD: FileInfo map: {roverX=[<FileInfo: contentType = image/jpeg, creation = Sun Jan 05 20:37:55 CST 2014, filename = rover_1_cam1.jpg, size = 129896, md5Hash = f7c80b3a1f32df68384ed59487b5cbba, gsObjectName = /gs/roverX-GCS-Bucket/fake-encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvSkZDQWhKMTF3TFhhdzU3Q3gtbi1Sdw-f7c80b3a1f32df68384ed59487b5cbba>]}
+        //   INFO: UPLOAD: FileInfo map: {roverX=[<FileInfo: contentType = image/jpeg, creation = Fri Aug 08 10:19:29 CDT 2014, filename = getfile_4.jpg, size = 140828, md5Hash = f6a6d02fc55b21271b17a9eefb3d867b, gsObjectName = /gs/roverX-GCS-Bucket/fake-encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvNXFfUHRGMG1YMmtjMHN4NG1GbjA5QQ-f6a6d02fc55b21271b17a9eefb3d867b>]}
         log.info("UPLOAD: FileInfo map: " + fileInfos);
         
         List<FileInfo> fileInfoList = fileInfos.get("roverX");
@@ -144,8 +148,10 @@ public class Upload extends HttpServlet {
         
         BlobInfo i = blobInfoFactory.loadBlobInfo(blobKey);        
         log.info("UPLOAD: __BlobInfo__: " + i );
+        //INFO: UPLOAD: __BlobInfo__: <BlobInfo: <BlobKey: encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvRG55RnZiMnR0RldBbDVPdnowTjNDdw>, contentType = image/jpeg, creation = Thu Aug 07 14:15:50 CDT 2014, filename = rover_1_cam1.jpg, size = 140016, md5Hash = ed21d7f004893bd98f11747d56d7ad5b>
         log.info("UPLOAD: blobKey: " + blobKey );
-
+        //INFO: UPLOAD: blobKey: <BlobKey: encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvRG55RnZiMnR0RldBbDVPdnowTjNDdw>
+        
         //res.sendRedirect("/serve?blob-key=" + blobKey.getKeyString());
         
         res.setContentType("text/plain");
@@ -163,9 +169,15 @@ public class Upload extends HttpServlet {
             String paramName = paramNames.nextElement();
             String paramValue = req.getParameter(paramName);
             res.getWriter().println("request:  " + paramName + "=" + paramValue );
+            log.info("UPLOAD: ATER URL RESPONSE - request: " + paramName + "=" + paramValue );
         }     
         
         res.getWriter().println("__BlobInfo__: " + i);
         res.getWriter().println("blobKey: " + blobKey);
+        
+        
+        
+        // dump all datastore entities for this bucket, then filter on date/older ones for delete
+        
     }
 }

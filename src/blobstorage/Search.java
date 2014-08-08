@@ -236,3 +236,66 @@ public class Search extends HttpServlet {
     }
 
 }
+
+/*
+ * <Entity [__BlobInfo__("encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvQmI4aTdKMUdRV281SWhKMkdtQzBWQQ")]:
+    creation = Fri Aug 08 11:02:04 CDT 2014
+    filename = rover_1_cam1.jpg
+    md5_hash = ed21d7f004893bd98f11747d56d7ad5b
+    content_type = image/jpeg
+    size = 140016
+>
+
+BLOBKEY = encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvQmI4aTdKMUdRV281SWhKMkdtQzBWQQ
+CREATION = Fri Aug 08 11:02:04 CDT 2014
+<Entity [__BlobInfo__("encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvQmlQd2l5cG43Rk1SSEJiLU5PS0dUdw")]:
+    creation = Fri Aug 08 10:00:17 CDT 2014
+    filename = rover_1_cam1.jpg
+    md5_hash = ed21d7f004893bd98f11747d56d7ad5b
+    content_type = image/jpeg
+    size = 140016
+>
+
+BLOBKEY = encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvQmlQd2l5cG43Rk1SSEJiLU5PS0dUdw
+CREATION = Fri Aug 08 10:00:17 CDT 2014
+<Entity [__BlobInfo__("encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvZ3luWWxXVmI5TUZoN0tocDc5TFh3QQ")]:
+    creation = Fri Aug 08 09:59:02 CDT 2014
+    filename = rover_1_cam1.jpg
+    md5_hash = ed21d7f004893bd98f11747d56d7ad5b
+    content_type = image/jpeg
+    size = 140016
+>
+
+BLOBKEY = encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvZ3luWWxXVmI5TUZoN0tocDc5TFh3QQ
+CREATION = Fri Aug 08 09:59:02 CDT 2014
+<Entity [__BlobInfo__("encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvaGRpYW9ZOHUySVhxVlNRMklyaXFqdw")]:
+    creation = Fri Aug 08 09:53:58 CDT 2014
+    filename = rover_1_cam1.jpg
+    md5_hash = ed21d7f004893bd98f11747d56d7ad5b
+    content_type = image/jpeg
+    size = 140016
+>
+
+BLOBKEY = encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvaGRpYW9ZOHUySVhxVlNRMklyaXFqdw
+CREATION = Fri Aug 08 09:53:58 CDT 2014
+<Entity [__BlobInfo__("encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvb0hWbHIxSGk0cWhLMUg1bnlsU1ZDUQ")]:
+    creation = Fri Aug 08 11:04:20 CDT 2014
+    filename = rover_1_cam1.jpg
+    md5_hash = ed21d7f004893bd98f11747d56d7ad5b
+    content_type = image/jpeg
+    size = 140016
+>
+
+BLOBKEY = encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvb0hWbHIxSGk0cWhLMUg1bnlsU1ZDUQ
+CREATION = Fri Aug 08 11:04:20 CDT 2014
+<Entity [__BlobInfo__("encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvcjdZNW10Nnd2Ykl0TzNDRk5rWmdzQQ")]:
+    creation = Fri Aug 08 10:10:25 CDT 2014
+    filename = rover_1_cam1.jpg
+    md5_hash = ed21d7f004893bd98f11747d56d7ad5b
+    content_type = image/jpeg
+    size = 140016
+>
+
+BLOBKEY = encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvcjdZNW10Nnd2Ykl0TzNDRk5rWmdzQQ
+CREATION = Fri Aug 08 10:10:25 CDT 2014
+*/
