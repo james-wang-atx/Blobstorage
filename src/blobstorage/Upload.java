@@ -189,8 +189,8 @@ public class Upload extends HttpServlet {
         
         Date date = new Date(); // "now"
         
-        // advance 10 minutes into future
-        date.setTime( date.getTime() + 1000*60*10 );
+        // move back to 10 minutes ago (i.e., we will delete all video that is older than that)
+        date.setTime( date.getTime() - 1000*60*10 );
         
         query.addFilter("creation", FilterOperator.LESS_THAN, date);
         
