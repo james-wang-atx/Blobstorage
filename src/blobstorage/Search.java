@@ -97,6 +97,20 @@ public class Search extends HttpServlet {
 
         if(modestring == null || modestring.equalsIgnoreCase("blobinfo")) {
             handleBlobInfoRequest(req, res, date, datestring, rover_id, entList);
+            
+            // dump metadata            
+            
+            Query metadataquery = new Query("METADATA");
+            if(date != null) {
+                metadataquery.addFilter("creation", FilterOperator.GREATER_THAN_OR_EQUAL , date);
+            }
+            for (Entity ent : datastore.prepare(metadataquery).asIterable())
+            {
+                log.info("FOUND METADATA Entity: " + ent.toString() );
+                res.getWriter().println(ent);
+                res.getWriter().println("------------------------------------------------------------------------------------------------");                
+            }
+
         }
         else {
             if(date == null)
@@ -168,6 +182,7 @@ public class Search extends HttpServlet {
                 res.getWriter().println(ent);
                 res.getWriter().println("BLOBKEY = " + blobkeystring);
                 res.getWriter().println("CREATION = " + creationstring);
+                res.getWriter().println("------------------------------------------------------------------------------------------------");
             }
 
             loop++;

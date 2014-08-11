@@ -5,6 +5,8 @@ package blobstorage;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -67,7 +69,7 @@ public class Upload extends HttpServlet {
      * 
      * The metadata from the upload form comes in as headers following the boundary markers:
      *  ------WebKitFormBoundaryXuA6PslJ1A21INU9
-     *  Content-Disposition: form-data; name="foo"
+     *  Content-Disposition: form-data; name="rover1"; date="ddd"; fire="false"; water="false"
      *  
      *  ------WebKitFormBoundaryXuA6PslJ1A21INU9
      *  Content-Disposition: form-data; name="roverX"; filename="rover_1_cam1.jpg"
@@ -164,27 +166,47 @@ public class Upload extends HttpServlet {
         // java client in rover is looking for this to use for next image POST
         res.getWriter().println("NEXT-uploadURL: " + GetNewUploadURL() + "\n" );        
         
+        ////////////////////////////////////////////
         // rest of response is extra debug info
+        ////////////////////////////////////////////
         
-        res.getWriter().println("request: " + req);        
+        res.getWriter().println("request: " + req);
+
+        // datastore "kind" for this entity will be "METADATA"
+        Entity metadata = new Entity("METADATA");
+        
+        // enumerate the extra sensor data come in as separate multi-part segments
         @SuppressWarnings("unchecked")
         Enumeration<String> paramNames = req.getParameterNames();
-        while(paramNames.hasMoreElements())
+        
+        if( paramNames.hasMoreElements() )
         {
-            String paramName = paramNames.nextElement();
-            String paramValue = req.getParameter(paramName);
-            res.getWriter().println("request:  " + paramName + "=" + paramValue );
-            log.info("UPLOAD: ATER URL RESPONSE - request: " + paramName + "=" + paramValue );
-        }     
+            DateFormat df = new SimpleDateFormat("MM dd yyyy HH:mm:ss zzz");
+            Date now = new Date();
+            
+            metadata.setProperty( "creation", df.format(now) );
+            while(paramNames.hasMoreElements())
+            {
+                String paramName = paramNames.nextElement();
+                String paramValue = req.getParameter(paramName);
+                
+                res.getWriter().println("request:  " + paramName + "=" + paramValue );
+                log.info("UPLOAD: ATER URL RESPONSE - request: " + paramName + "=" + paramValue );
+                
+                metadata.setProperty(paramName, paramValue);
+            }     
+            
+            // SAVE the sensor data to the datastore
+            datastoreService.put(metadata);
+        }
         
         res.getWriter().println("__BlobInfo__: " + i);
         res.getWriter().println("blobKey: " + blobKey);
         
-        // dump all datastore entities for this bucket, then filter on date/older ones for delete
+        // query for all datastore blob entities for this bucket, then filter on date/older ones for delete
         // normally you only have 1 bucket per app, so there is no issue with choosing buckets.
         // we will store all rover(s) data in same bucket distinguished with filename.
         
-        //datastoreService
         Query query = new Query("__BlobInfo__");
         
         Date date = new Date(); // "now"
@@ -195,6 +217,20 @@ public class Upload extends HttpServlet {
         query.addFilter("creation", FilterOperator.LESS_THAN, date);
         
         for (Entity ent : datastoreService.prepare(query).asIterable())
+        {
+            //Date creationdate = (Date)ent.getProperty("creation");            
+            log.info("DELETING Entity: " + ent.toString() );
+            datastoreService.delete( ent.getKey() );
+        }
+        
+        // query for all datastore METADATA entities for this bucket, then filter on date/older ones for deletion
+        
+        Query metadataquery = new Query("METADATA");
+
+        // use same 10 minute old date from prior video query
+        metadataquery.addFilter("creation", FilterOperator.LESS_THAN, date);
+        
+        for (Entity ent : datastoreService.prepare(metadataquery).asIterable())
         {
             //Date creationdate = (Date)ent.getProperty("creation");            
             log.info("DELETING Entity: " + ent.toString() );
