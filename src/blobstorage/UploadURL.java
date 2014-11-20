@@ -37,8 +37,12 @@ public class UploadURL extends HttpServlet {
     private static final Logger log = Logger.getLogger(Serve.class.getName());
 
     //private BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-    String bucket = System.getProperty(PROP_NAME_CLOUD_STORAGE_BUCKET_NAME); //"roverX-GCS-Bucket";
+    String bucket = System.getProperty(PROP_NAME_CLOUD_STORAGE_BUCKET_NAME); //"roverx-gcs-bucket";
     UploadOptions uploadOptions = UploadOptions.Builder.withGoogleStorageBucketName(bucket);
+    //UploadOptions uploadOptions = UploadOptions.Builder
+    //        .withMaxUploadSizeBytesPerBlob(1024 * 1024 * 1024)
+    //        .maxUploadSizeBytes(1024 * 1024 * 1024)
+    //        .googleStorageBucketName(bucket);
     
     private String uploadUrl = null;
     

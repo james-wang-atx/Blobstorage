@@ -13,7 +13,7 @@
     <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
     
      <!-- The Cloud Storage bucket name -->
-     <property name="cloudStorageBucketName" value="roverX-GCS-Bucket"/>    
+     <property name="cloudStorageBucketName" value="roverx-gcs-bucket"/>    
   </system-properties>
 
   <!--
