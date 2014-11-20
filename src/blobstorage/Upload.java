@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
+import com.google.appengine.api.LifecycleManager;
+import com.google.appengine.api.LifecycleManager.ShutdownHook;
 import com.google.appengine.api.blobstore.FileInfo;
 import com.google.appengine.api.blobstore.BlobInfo;
 import com.google.appengine.api.blobstore.BlobInfoFactory;
@@ -35,6 +37,7 @@ public class Upload extends HttpServlet {
     private BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     private DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
     private BlobInfoFactory  blobInfoFactory = new BlobInfoFactory(datastoreService);
+    private EMailRequestManagerSingleton emrm = null;
     
     private static final String PROP_NAME_CLOUD_STORAGE_BUCKET_NAME = "cloudStorageBucketName";
         
@@ -166,9 +169,10 @@ public class Upload extends HttpServlet {
         // java client in rover is looking for this to use for next image POST
         res.getWriter().println("NEXT-uploadURL: " + GetNewUploadURL() + "\n" );        
         
-        ////////////////////////////////////////////
-        // rest of response is extra debug info
-        ////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        // rest of response is extra debug info + 
+        //   METADATA entity storage which includes the alarm data
+        //
         
         res.getWriter().println("request: " + req);
 
@@ -184,6 +188,11 @@ public class Upload extends HttpServlet {
             DateFormat df = new SimpleDateFormat("MM dd yyyy HH:mm:ss zzz");
             Date now = new Date();
             
+            boolean fireDetected = false;
+            boolean waterDetected = false;
+            String fireTimestamp = "";
+            String waterTimestamp = "";
+            
             metadata.setProperty( "creation", df.format(now) );
             while(paramNames.hasMoreElements())
             {
@@ -194,15 +203,46 @@ public class Upload extends HttpServlet {
                 log.info("UPLOAD: ATER URL RESPONSE - request: " + paramName + "=" + paramValue );
                 
                 metadata.setProperty(paramName, paramValue);
+               
+                // TODO: HERE AND IN CLIENT CHANGE "fire=true" or false to "fire=<timestamp>" or false.
+                //       SAME for water and other simple alarms.
+                
+                //see ClientMultipartFormPost.java ~311
+                if(paramName.equals("fire")) {
+                    if( !paramValue.equals("false") ) {
+                        fireDetected = true;
+                        fireTimestamp = paramValue;
+                    }
+                } else if(paramName.equals("water")) {
+                    if( !paramValue.equals("false") ) {
+                        waterDetected = true;
+                        waterTimestamp = paramValue;        
+                    }
+                } //TODO: add "intrusion-VMD" and "intrusion-PIR"
             }     
             
             // SAVE the sensor data to the datastore
             datastoreService.put(metadata);
+            
+            if( fireDetected || waterDetected ) {
+                log.severe("UPLOAD: got alarm data - fire = " + fireTimestamp + ", water = " + waterTimestamp );
+                // queue up email job - the job descr should contain the 'blobKey' value
+                String htmlBody = "<b> fire=" + fireTimestamp + ", water=" + waterTimestamp + "</b>";
+                emrm.AddRequest(new EMailRequest("ss-rover-blobserver@appspot.gserviceaccount.com", 
+                                                 "james.wang.atx@gmail.com", 
+                                                 "me",
+                                                 "rover alarm",
+                                                 htmlBody,
+                                                 blobKey));
+            }
         }
         
+        // debug info:
         res.getWriter().println("__BlobInfo__: " + i);
         res.getWriter().println("blobKey: " + blobKey);
         
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        // PURGE OLD DATA:
         // query for all datastore blob entities for this bucket, then filter on date/older ones for delete
         // normally you only have 1 bucket per app, so there is no issue with choosing buckets.
         // we will store all rover(s) data in same bucket distinguished with filename.
@@ -237,4 +277,59 @@ public class Upload extends HttpServlet {
             datastoreService.delete( ent.getKey() );
         }
     }
+
+
+    // This class has a Warmup request configured for it in web.xml:
+    //   <load-on-startup>1</load-on-startup>
+    //
+    //   see https://developers.google.com/appengine/docs/java/config/appconfig#using_a_load-on-startup_servlet    
+    public void init() {
+        log.info("Upload.init() --------------------------" );
+
+        //SendMail.Init();
+        
+        // works
+        //SendMail.SendEMail("james.wang.atx@gmail.com",
+        //                   "james.wang@krystallizetechnologies.com",
+        //                   "me",
+        //                   "testsubject1",
+        //                   "test body");
+
+        // worked after adding soteriaut@gmail.com to permissions on page: https://console.developers.google.com/project/ss-rover-blobserver/permissions
+        // BUT mail ended up in SPAM?
+        //SendMail.SendEMail("soteriaut@gmail.com",
+        //                   "james.wang.atx@gmail.com",
+        //                   "me",
+        //                   "testsubject2",
+        //                   "test body2");
+        
+        // worked but also ended up in SPAM!
+        //SendMail.SendEMail("james.wang.atx@gmail.com",
+        //        "james.wang.atx@gmail.com",
+        //        "me",
+        //        "testsubject3",
+        //        "test body3");
+
+        // this worked
+        //SendMail.SendEMail("ss-rover-blobserver@appspot.gserviceaccount.com",
+        //        "james.wang@krystallizetechnologies.com",
+        //        "me",
+        //        "testsubject4",
+        //        "test body4");
+        
+        SendMail.SendEMail("ss-rover-blobserver@appspot.gserviceaccount.com",
+                "james.wang.atx@gmail.com",
+                "James Wang",
+                "ss-rover-blobserver.appspot.com site",
+                "ss-rover-blobserver.appspot.com iniatialized!");
+        
+        emrm = EMailRequestManagerSingleton.GetInstance();
+        
+        LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
+            public void shutdown() {
+                EMailRequestManagerSingleton.GetInstance().Shutdown();
+            }
+          });
+    }
+
 }
