@@ -30,6 +30,9 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 
 @SuppressWarnings("serial")
 public class Upload extends HttpServlet {
@@ -47,7 +50,7 @@ public class Upload extends HttpServlet {
         UploadOptions uploadOptions = UploadOptions.Builder.withGoogleStorageBucketName(bucket);
         String uploadUrl = null;
         
-        log.info("GetNewUploadURL: bucket: " + bucket);
+        log.severe("GetNewUploadURL: bucket: " + bucket);
         
         try
         {
@@ -104,6 +107,8 @@ public class Upload extends HttpServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse res)
         throws ServletException, IOException {
 
+        log.severe("Upload.doPost:Entry");
+        
         //@SuppressWarnings("deprecation")
         //Map<String, BlobKey> blobs = blobstoreService.getUploadedBlobs(req);
         
@@ -159,7 +164,7 @@ public class Upload extends HttpServlet {
         BlobInfo i = blobInfoFactory.loadBlobInfo(blobKey);        
         log.info("UPLOAD: __BlobInfo__: " + i );
         //INFO: UPLOAD: __BlobInfo__: <BlobInfo: <BlobKey: encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvRG55RnZiMnR0RldBbDVPdnowTjNDdw>, contentType = image/jpeg, creation = Thu Aug 07 14:15:50 CDT 2014, filename = rover_1_cam1.jpg, size = 140016, md5Hash = ed21d7f004893bd98f11747d56d7ad5b>
-        log.info("UPLOAD: blobKey: " + blobKey );
+        log.severe("UPLOAD: blobKey: " + blobKey );
         //INFO: UPLOAD: blobKey: <BlobKey: encoded_gs_key:cm92ZXJYLUdDUy1CdWNrZXQvRG55RnZiMnR0RldBbDVPdnowTjNDdw>
         
         //res.sendRedirect("/serve?blob-key=" + blobKey.getKeyString());
@@ -234,6 +239,8 @@ public class Upload extends HttpServlet {
                                                  "rover alarm",
                                                  htmlBody,
                                                  blobKey));
+                Queue queue = QueueFactory.getDefaultQueue();
+                queue.add( TaskOptions.Builder.withUrl("/task").param("key", "boo"));
             }
         }
         
@@ -325,11 +332,11 @@ public class Upload extends HttpServlet {
         
         emrm = EMailRequestManagerSingleton.GetInstance();
         
-        LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
-            public void shutdown() {
-                EMailRequestManagerSingleton.GetInstance().Shutdown();
-            }
-          });
+        //LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
+        //    public void shutdown() {
+        //        EMailRequestManagerSingleton.GetInstance().Shutdown();
+        //    }
+        //  });
     }
 
 }

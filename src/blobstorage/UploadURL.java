@@ -48,7 +48,7 @@ public class UploadURL extends HttpServlet {
             uploadUrl = BlobstoreServiceFactory.getBlobstoreService().createUploadUrl("/upload", uploadOptions);
             String myIp = InetAddress.getLocalHost().getHostAddress().toString();
         
-            log.info("UploadURL: bucket: " + bucket);
+            log.severe("UploadURL: bucket: " + bucket + ", uploadUrl=" + uploadUrl);
             
             if( System.getProperty("com.google.appengine.runtime.environment") == "Development" ) {
                 uploadUrl = uploadUrl.replace("127.0.0.1", myIp);

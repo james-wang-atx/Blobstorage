@@ -25,6 +25,11 @@
     <servlet-name>Search</servlet-name>
     <servlet-class>blobstorage.Search</servlet-class>
   </servlet>
+
+  <servlet>
+    <servlet-name>TaskWorker</servlet-name>
+    <servlet-class>blobstorage.TaskWorker</servlet-class>
+  </servlet>
   
   <servlet-mapping>
     <servlet-name>Upload</servlet-name>
@@ -46,6 +51,11 @@
     <url-pattern>/search</url-pattern>
   </servlet-mapping>
 
+  <servlet-mapping>
+    <servlet-name>TaskWorker</servlet-name>
+    <url-pattern>/task</url-pattern>
+  </servlet-mapping>
+  
 <!-- 
   <servlet>
     <display-name>Remote API Servlet</display-name>

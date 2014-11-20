@@ -1,4 +1,11 @@
-<!-- Indices written at Wed, 19 Nov 2014 19:14:20 CST -->
+<!-- Indices written at Wed, 19 Nov 2014 23:21:48 CST -->
 
-<datastore-indexes/>
+<datastore-indexes>
 
+    <!-- Used 1 time in query history -->
+    <datastore-index kind="__BlobInfo__" ancestor="false" source="auto">
+        <property name="filename" direction="asc"/>
+        <property name="creation" direction="asc"/>
+    </datastore-index>
+
+</datastore-indexes>
