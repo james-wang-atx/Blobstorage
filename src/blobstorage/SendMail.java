@@ -19,7 +19,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import com.google.appengine.api.blobstore.BlobInfo;
 import com.google.appengine.api.blobstore.BlobInfoFactory;
-import com.google.appengine.api.blobstore.BlobKey;
+//import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.datastore.DatastoreService;
@@ -27,7 +27,7 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 
 public class SendMail
 {
-    private static boolean hasInit = false;
+    //private static boolean hasInit = false;
     private static BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     private static DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
     private static BlobInfoFactory  blobInfoFactory = new BlobInfoFactory(datastoreService);

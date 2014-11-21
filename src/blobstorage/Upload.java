@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
-import com.google.appengine.api.LifecycleManager;
-import com.google.appengine.api.LifecycleManager.ShutdownHook;
+//import com.google.appengine.api.LifecycleManager;
+//import com.google.appengine.api.LifecycleManager.ShutdownHook;
 import com.google.appengine.api.blobstore.FileInfo;
 import com.google.appengine.api.blobstore.BlobInfo;
 import com.google.appengine.api.blobstore.BlobInfoFactory;
@@ -40,7 +40,7 @@ public class Upload extends HttpServlet {
     private BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     private DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
     private BlobInfoFactory  blobInfoFactory = new BlobInfoFactory(datastoreService);
-    private EMailRequestManagerSingleton emrm = null;
+  //private EMailRequestManagerSingleton emrm = null;
     
     private static final String PROP_NAME_CLOUD_STORAGE_BUCKET_NAME = "cloudStorageBucketName";
         
@@ -151,6 +151,9 @@ public class Upload extends HttpServlet {
         //   name="rover_<id>"; filename="rover_<id>.jpg"
         // But, we would have to build a map here (e.g., one map for each rover_<id> containing timestamps and BlobKey's for every
         //   video frame belonging to that rover.)
+        // CURRENTLY: name = "roverX" and filename=rover_<#>_cam<#>.
+        //   So, the rover id can be decoded from the filename.
+        //   ALSO, We get the rover id value separately with the METADATA ALARMS, below...
         
         BlobKey blobKey = null;
         
@@ -193,25 +196,32 @@ public class Upload extends HttpServlet {
             DateFormat df = new SimpleDateFormat("MM dd yyyy HH:mm:ss zzz");
             Date now = new Date();
             
-            boolean fireDetected = false;
-            boolean waterDetected = false;
-            String fireTimestamp = "";
-            String waterTimestamp = "";
+            //boolean fireDetected = false;
+            //boolean waterDetected = false;
+            //String fireTimestamp = "";
+            //String waterTimestamp = "";
             
-            metadata.setProperty( "creation", df.format(now) );
+//            metadata.setProperty( "creation", df.format(now) );
+            metadata.setProperty( "creation", now );
             while(paramNames.hasMoreElements())
             {
                 String paramName = paramNames.nextElement();
                 String paramValue = req.getParameter(paramName);
                 
                 res.getWriter().println("request:  " + paramName + "=" + paramValue );
+                
                 log.info("UPLOAD: ATER URL RESPONSE - request: " + paramName + "=" + paramValue );
+                /*  EXAMPLE:
+                        INFO: UPLOAD: ATER URL RESPONSE - request: water=true
+                        INFO: UPLOAD: ATER URL RESPONSE - request: name=rover1
+                        INFO: UPLOAD: ATER URL RESPONSE - request: date=11 20 2014 09:03:30 CST
+                        INFO: UPLOAD: ATER URL RESPONSE - request: fire=true
+                 */
                 
                 metadata.setProperty(paramName, paramValue);
-               
-                // TODO: HERE AND IN CLIENT CHANGE "fire=true" or false to "fire=<timestamp>" or false.
-                //       SAME for water and other simple alarms.
-                
+                //metadata.getProperty(propertyName)
+                                
+                /*
                 //see ClientMultipartFormPost.java ~311
                 if(paramName.equals("fire")) {
                     if( !paramValue.equals("false") ) {
@@ -224,11 +234,14 @@ public class Upload extends HttpServlet {
                         waterTimestamp = paramValue;        
                     }
                 } //TODO: add "intrusion-VMD" and "intrusion-PIR"
+                */
             }     
             
             // SAVE the sensor data to the datastore
             datastoreService.put(metadata);
             
+            AlarmRouterSingleton.GetInstance().ProcessAlarm(metadata, blobKey);
+            /*
             if( fireDetected || waterDetected ) {
                 log.severe("UPLOAD: got alarm data - fire = " + fireTimestamp + ", water = " + waterTimestamp );
                 // queue up email job - the job descr should contain the 'blobKey' value
@@ -242,6 +255,7 @@ public class Upload extends HttpServlet {
                 Queue queue = QueueFactory.getDefaultQueue();
                 queue.add( TaskOptions.Builder.withUrl("/task").param("key", "boo"));
             }
+            */
         }
         
         // debug info:
@@ -254,6 +268,8 @@ public class Upload extends HttpServlet {
         // normally you only have 1 bucket per app, so there is no issue with choosing buckets.
         // we will store all rover(s) data in same bucket distinguished with filename.
         
+        log.severe("Upload.doPost: Creating new Query __BlobInfo__");
+        
         Query query = new Query("__BlobInfo__");
         
         Date date = new Date(); // "now"
@@ -261,27 +277,47 @@ public class Upload extends HttpServlet {
         // move back to 10 minutes ago (i.e., we will delete all video that is older than that)
         date.setTime( date.getTime() - 1000*60*10 );
         
+        log.severe("Upload.doPost: adding 10min filter to query results");
+        
         query.addFilter("creation", FilterOperator.LESS_THAN, date);
+        
+        log.severe("Upload.doPost: start interating results");
+        
+        BlobInfoFactory blobInfoFactory = new BlobInfoFactory();
         
         for (Entity ent : datastoreService.prepare(query).asIterable())
         {
+            BlobInfo blobInfo = blobInfoFactory.createBlobInfo(ent);
+            
             //Date creationdate = (Date)ent.getProperty("creation");            
-            log.info("DELETING Entity: " + ent.toString() );
-            datastoreService.delete( ent.getKey() );
+            log.severe("DELETING Blob Entity: " + ent.toString() );
+            try {
+                //datastoreService.delete( ent.getKey() );
+                blobstoreService.delete(blobInfo.getBlobKey());
+            }
+            catch( java.lang.IllegalArgumentException e ) {
+                log.severe("DELETING Entity failed!" );                
+            }
         }
         
         // query for all datastore METADATA entities for this bucket, then filter on date/older ones for deletion
         
+        log.severe("Upload.doPost: Creating new Query METADATA");
         Query metadataquery = new Query("METADATA");
-
+        
         // use same 10 minute old date from prior video query
         metadataquery.addFilter("creation", FilterOperator.LESS_THAN, date);
         
         for (Entity ent : datastoreService.prepare(metadataquery).asIterable())
         {
             //Date creationdate = (Date)ent.getProperty("creation");            
-            log.info("DELETING Entity: " + ent.toString() );
-            datastoreService.delete( ent.getKey() );
+            log.info("DELETING METADATA Entity: " + ent.toString() );
+            try {
+                datastoreService.delete( ent.getKey() );
+            }
+            catch( java.lang.IllegalArgumentException e ) {
+                log.severe("DELETING Entity failed!" );                
+            }
         }
     }
 
@@ -330,7 +366,7 @@ public class Upload extends HttpServlet {
                 "ss-rover-blobserver.appspot.com site",
                 "ss-rover-blobserver.appspot.com iniatialized!");
         
-        emrm = EMailRequestManagerSingleton.GetInstance();
+      //emrm = EMailRequestManagerSingleton.GetInstance();
         
         //LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
         //    public void shutdown() {
