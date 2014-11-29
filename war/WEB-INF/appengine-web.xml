@@ -14,7 +14,31 @@
     
      <!-- The Cloud Storage bucket name -->
      <property name="cloudStorageBucketName" value="roverx-gcs-bucket"/>
-     <!-- TODO: TRY FREE DEFAULT BUCKET NAME: ss-rover-blobserver.appspot.com -->    
+     <!-- TODO: TRY DEFAULT BUCKET NAME: ss-rover-blobserver.appspot.com -->
+     <!-- see: http://stackoverflow.com/questions/25299288/getdefaultgcsbucketname-contained-no-data
+          "I had the same problem with an 1.9.7 app.
+           Go to appengine.google.com,
+           <Select your project in left panel, then...>
+           [in left panel] go to Administration-> Application Settings.
+           Scroll to the bottom of the page, Cloud Integration and enable it (click Create).
+           After a while you should see the Google Cloud Storage Bucket, in the [end of] "Basics" area in the same page.
+           
+           The above instructions is basically saying same as what is described here:
+                https://cloud.google.com/appengine/docs/php/googlestorage/setup
+                
+           "For apps created after the App Engine 1.9.0 release, the default GCS bucket is automatically created with your app.
+            For apps created before the App Engine 1.9.0 release, you can obtain a default bucket for it by clicking Create 
+            within the Cloud Integration section in the Application Settings page of the App Engine Admin Console."
+
+           The blobstore app was originally deployed with previous appengine sdk 1.8.8, so even though I redeployed
+           with 1.9.7, it probably didn't change any of the initial application settings.
+           
+           Finally, I don't know where the equivalent setting is in the new console.developers.google.com page vs.
+           the old appengine.google.com page.  However, in the new page, the default gcs bucket does show up in
+           Storage...>Cloud Storage...>Storage Browser
+           The enabling of 'Cloud Integration' in the old settings page probably relates to API enablement in the
+           new settings page, but not sure...
+       -->    
   </system-properties>
 
   <!--

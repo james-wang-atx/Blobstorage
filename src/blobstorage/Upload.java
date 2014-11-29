@@ -210,7 +210,7 @@ public class Upload extends HttpServlet {
                 
                 res.getWriter().println("request:  " + paramName + "=" + paramValue );
                 
-                log.info("UPLOAD: ATER URL RESPONSE - request: " + paramName + "=" + paramValue );
+                log.severe("UPLOAD: ATER URL RESPONSE - request: " + paramName + "=" + paramValue );
                 /*  EXAMPLE:
                         INFO: UPLOAD: ATER URL RESPONSE - request: water=true
                         INFO: UPLOAD: ATER URL RESPONSE - request: name=rover1
@@ -277,11 +277,11 @@ public class Upload extends HttpServlet {
         // move back to 10 minutes ago (i.e., we will delete all video that is older than that)
         date.setTime( date.getTime() - 1000*60*10 );
         
-        log.severe("Upload.doPost: adding 10min filter to query results");
+        log.severe("Upload.doPost: adding 10min filter to blobinfo query results");
         
         query.addFilter("creation", FilterOperator.LESS_THAN, date);
         
-        log.severe("Upload.doPost: start interating results");
+        log.severe("Upload.doPost: start interating blobinfo results");
         
         BlobInfoFactory blobInfoFactory = new BlobInfoFactory();
         
@@ -305,13 +305,17 @@ public class Upload extends HttpServlet {
         log.severe("Upload.doPost: Creating new Query METADATA");
         Query metadataquery = new Query("METADATA");
         
+        log.severe("Upload.doPost: adding 10min filter to metadata query results");
+        
         // use same 10 minute old date from prior video query
         metadataquery.addFilter("creation", FilterOperator.LESS_THAN, date);
+        
+        log.severe("Upload.doPost: start interating metadata results");
         
         for (Entity ent : datastoreService.prepare(metadataquery).asIterable())
         {
             //Date creationdate = (Date)ent.getProperty("creation");            
-            log.info("DELETING METADATA Entity: " + ent.toString() );
+            log.severe("DELETING METADATA Entity: " + ent.toString() );
             try {
                 datastoreService.delete( ent.getKey() );
             }
